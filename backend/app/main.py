@@ -45,8 +45,8 @@ manager = ConnectionManager()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
     try:
+        await manager.connect(websocket)
         while True:
             data = await websocket.receive_text()
             logger.info(f"Received message: {data}")
@@ -55,7 +55,7 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
         await manager.broadcast("A client disconnected")
     except Exception as e:
-        logger.error(e)
+        logger.error(f"UnexpectedError: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
