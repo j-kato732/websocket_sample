@@ -6,7 +6,8 @@ const WebSocketComponent: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/ws');
+    const clientId = Date.now()
+    const ws = new WebSocket(`ws://localhost:80/ws?clientId=${clientId}`);
     
     ws.onopen = () => {
       console.log('Connected to WebSocket');
@@ -20,9 +21,18 @@ const WebSocketComponent: React.FC = () => {
       console.log('Disconnected from WebSocket');
     };
 
+    ws.onerror = (error) => {
+      console.error(error);
+    }
+
+    // window.addEventListener('beforeunload', () => {
+    //   ws.close(1000, 'Page is being unloaded');
+    // });
+
     setSocket(ws);
 
     return () => {
+      console.log('Websocket cleanup')
       ws.close();
     };
   }, []);
