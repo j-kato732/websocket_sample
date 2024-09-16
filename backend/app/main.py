@@ -54,6 +54,8 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast("A client disconnected")
+    except Exception as e:
+        logger.error(e)
 
 if __name__ == "__main__":
     import uvicorn
