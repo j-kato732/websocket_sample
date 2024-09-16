@@ -84,7 +84,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await manager.broadcast(json.dumps({"message": data}))
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(json.dumps({"message": "A client disconnected"}))
+        logger.info("message: A client disconnected")
+        # await manager.broadcast(json.dumps({"message": "A client disconnected"}))
     except Exception as e:
         logger.error(f"UnexpectedError: {str(e)}")
 
