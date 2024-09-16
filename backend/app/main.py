@@ -1,6 +1,7 @@
 import logging
 import json
 import asyncio
+import ast
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -56,13 +57,15 @@ class ConnectionManager:
                 message = await self.pubsub.get_message(ignore_subscribe_messages=True)
                 if message:
                     data = message["data"].decode("utf-8")
-                    await self.send_to_all_connections(data)
+                    print(data, type(data))
+                    message = ast.literal_eval(data).get("message")
+                    await self.send_to_all_connections(message)
         finally:
             await self.pubsub.unsubscribe(REDIS_CHANNEL)
 
     async def send_to_all_connections(self, message: str):
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_text(f"Message received: {message}")
         logger.info(f"Sent message to all connections: {message}")
 
 manager = ConnectionManager()
