@@ -1,7 +1,10 @@
 import logging
+import json
+import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+import redis.asyncio as redis
 
 # ロガーの設定
 logging.basicConfig(
@@ -23,9 +26,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Redis接続設定
+REDIS_URL = "redis://redis:6379"  # Redisサーバーのアドレスを適切に設定してください
+REDIS_CHANNEL = "chat_messages"
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.redis_client = redis.from_url(REDIS_URL)
+        self.pubsub = self.redis_client.pubsub()
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -37,11 +46,30 @@ class ConnectionManager:
         logger.info(f"Client disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: str):
+        await self.redis_client.publish(REDIS_CHANNEL, message)
+        logger.info(f"Published message to Redis: {message}")
+
+    async def redis_listener(self):
+        await self.pubsub.subscribe(REDIS_CHANNEL)
+        try:
+            while True:
+                message = await self.pubsub.get_message(ignore_subscribe_messages=True)
+                if message:
+                    data = message["data"].decode("utf-8")
+                    await self.send_to_all_connections(data)
+        finally:
+            await self.pubsub.unsubscribe(REDIS_CHANNEL)
+
+    async def send_to_all_connections(self, message: str):
         for connection in self.active_connections:
             await connection.send_text(message)
-        logger.info(f"Broadcast message: {message}")
+        logger.info(f"Sent message to all connections: {message}")
 
 manager = ConnectionManager()
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(manager.redis_listener())
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -50,10 +78,10 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             logger.info(f"Received message: {data}")
-            await manager.broadcast(f"Message received: {data}")
+            await manager.broadcast(json.dumps({"message": data}))
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast("A client disconnected")
+        await manager.broadcast(json.dumps({"message": "A client disconnected"}))
     except Exception as e:
         logger.error(f"UnexpectedError: {str(e)}")
 
