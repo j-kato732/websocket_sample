@@ -6,9 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix: 
-        target: ["backend", "redis"]
+    # strategy:
+    #   matrix: 
+    #     target: ["backend", "redis"]
     steps:
       -
         name: Login to Docker Hub
@@ -29,6 +29,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.target }}/
+          # context: ./${{ matrix.target }}/
           push: true
           tags: ${{ vars.DOCKERHUB_USERNAME }}/websocket_server_sample_${{matrix.target}}:latest
