@@ -23,6 +23,6 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.target }}
+          context: ./${{ matrix.target }}/
           push: true
           tags: ${{ vars.DOCKERHUB_USERNAME }}/websocket_server_sample:latest
