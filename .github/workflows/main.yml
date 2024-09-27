@@ -37,6 +37,6 @@ jobs:
           context: ${{ matrix.target }}
           platforms: ${{ steps.buildx.outputs.platforms }}
           target: production
-          platform: linux/arm64
+          # platform: linux/arm64
           push: true
           tags: ${{ vars.DOCKERHUB_USERNAME }}/websocket_server_sample_${{ matrix.target }}:latest
