@@ -27,5 +27,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.target }}
+          target: production
           push: true
           tags: ${{ vars.DOCKERHUB_USERNAME }}/websocket_server_sample_${{ matrix.target }}:latest
