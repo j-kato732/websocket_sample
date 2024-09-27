@@ -20,6 +20,12 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       -
+        name: list
+        run: ls -al
+      - 
+        name: pwd
+        run: pwd
+      -
         name: Build and push
         uses: docker/build-push-action@v6
         with:
